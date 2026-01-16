@@ -1,4 +1,5 @@
 import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -48,25 +49,30 @@ export const uploadFile = async (file, prefix = "") => {
   const normalizedPrefix = prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
   const key = `${normalizedPrefix}${file.name}`;
 
-  /* Fix for browser compatibility: Convert File/Blob to ArrayBuffer
-   * AWS SDK v3 in some browser environments (especially via Vite/Rollup)
-   * can fail with "readableStream.getReader is not a function" when passed a File/Blob directly.
-   */
-  let body = file;
-  if (file instanceof File || file instanceof Blob) {
-    body = await file.arrayBuffer();
-  } else if (typeof file === 'string') {
-    body = new TextEncoder().encode(file);
-  }
-
-  const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: body,
-  });
-
   try {
-    await s3Client.send(command);
+    // 1. Generate Presigned URL
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      // ContentType is important for the browser to send it correctly
+      ContentType: file.type || 'application/octet-stream',
+    });
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+    // 2. Upload using fetch
+    const response = await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type || 'application/octet-stream',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+
     return key;
   } catch (error) {
     console.error("Error uploading file:", error);
