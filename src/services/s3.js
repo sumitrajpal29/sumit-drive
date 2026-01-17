@@ -47,7 +47,9 @@ export const listBucketContent = async (prefix = "") => {
 
 export const uploadFile = async (file, prefix = "") => {
   const normalizedPrefix = prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
-  const key = `${normalizedPrefix}${file.name}`;
+  // Use webkitRelativePath if available (for folder uploads), otherwise fall back to name
+  const fileName = file.webkitRelativePath || file.name;
+  const key = `${normalizedPrefix}${fileName}`;
 
   try {
     // 1. Generate Presigned URL
