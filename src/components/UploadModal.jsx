@@ -2,6 +2,8 @@ import React, { useState, useMemo, useRef } from 'react';
 import { uploadFile } from '../services/s3';
 import { formatBytes } from '../utils/format';
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
 export default function UploadModal({ isOpen, onClose, currentPath, onUploadComplete }) {
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
@@ -13,11 +15,23 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
         return files.reduce((acc, file) => acc + file.size, 0);
     }, [files]);
 
+    const isAnyFileOversized = useMemo(() => {
+        return files.some(file => file.size > MAX_FILE_SIZE);
+    }, [files]);
+
     if (!isOpen) return null;
 
     const handleFileChange = (e) => {
-        setFiles(Array.from(e.target.files));
-        setError(null);
+        const selectedFiles = Array.from(e.target.files);
+        const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+
+        if (oversizedFiles.length > 0) {
+            setError(`Some files exceed the 50MB limit. You are not allowed to upload files larger than ${formatBytes(MAX_FILE_SIZE)}. Please contact developer for support.`);
+        } else {
+            setError(null);
+        }
+
+        setFiles(selectedFiles);
     };
 
     const handleClose = () => {
@@ -203,14 +217,18 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                             <span>Total: {formatBytes(totalSize)}</span>
                         </div>
                         <div className="flex flex-col gap-1" style={{ gap: '0.25rem' }}>
-                            {files.slice(0, 50).map((file, idx) => (
-                                <div key={idx} className="flex justify-between text-secondary" style={{ fontSize: '0.85rem' }}>
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
-                                        {file.webkitRelativePath || file.name}
-                                    </span>
-                                    <span>{formatBytes(file.size)}</span>
-                                </div>
-                            ))}
+                            {files.slice(0, 50).map((file, idx) => {
+                                const isOversized = file.size > MAX_FILE_SIZE;
+                                return (
+                                    <div key={idx} className="flex justify-between text-secondary" style={{ fontSize: '0.85rem', color: isOversized ? 'var(--color-danger)' : 'inherit' }}>
+                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                                            {file.webkitRelativePath || file.name}
+                                            {isOversized && " (Exceeds limit)"}
+                                        </span>
+                                        <span>{formatBytes(file.size)}</span>
+                                    </div>
+                                );
+                            })}
                             {files.length > 50 && (
                                 <div className="text-secondary text-center italic" style={{ fontSize: '0.8rem' }}>
                                     ...and {files.length - 50} more files
@@ -246,8 +264,12 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                     {!uploading && (
                         <button
                             onClick={handleUpload}
-                            disabled={files.length === 0}
-                            style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
+                            disabled={files.length === 0 || isAnyFileOversized}
+                            style={{
+                                backgroundColor: isAnyFileOversized ? 'var(--color-border)' : 'var(--color-primary)',
+                                borderColor: isAnyFileOversized ? 'var(--color-border)' : 'var(--color-primary)',
+                                cursor: isAnyFileOversized ? 'not-allowed' : 'pointer'
+                            }}
                         >
                             Upload {files.length > 0 ? `(${formatBytes(totalSize)})` : ''}
                         </button>
