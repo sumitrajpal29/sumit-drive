@@ -62,7 +62,7 @@ export const listBucketContent = async (prefix = "") => {
   }
 };
 
-export const uploadFile = async (file, prefix = "") => {
+export const uploadFile = async (file, prefix = "", signal) => {
   const normalizedPrefix = prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
   const fileName = file.webkitRelativePath || file.name;
   const key = `${normalizedPrefix}${fileName}`;
@@ -78,6 +78,7 @@ export const uploadFile = async (file, prefix = "") => {
         key,
         contentType: file.type || 'application/octet-stream'
       }),
+      signal
     });
 
     if (!presignResponse.ok) {
@@ -93,6 +94,7 @@ export const uploadFile = async (file, prefix = "") => {
       headers: {
         "Content-Type": file.type || 'application/octet-stream',
       },
+      signal
     });
 
     if (!uploadResponse.ok) {
@@ -101,6 +103,10 @@ export const uploadFile = async (file, prefix = "") => {
 
     return key;
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Upload aborted by user');
+      throw error;
+    }
     console.error("Error uploading file:", error);
     throw error;
   }
