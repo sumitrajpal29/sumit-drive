@@ -79,17 +79,61 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                 {error && <div className="p-4 mb-4" style={{ background: '#ef444420', color: '#ef4444', borderRadius: '4px' }}>{error}</div>}
 
                 <div className="mb-4">
-                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Select Files or Folder:</label>
-                    <input
-                        type="file"
-                        multiple
-                        webkitdirectory=""
-                        directory=""
-                        onChange={handleFileChange}
-                        style={{ display: 'block', width: '100%', padding: '0.5rem', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '4px' }}
-                    />
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Select Content:</label>
+                    <div className="flex gap-4">
+                        <div style={{ flex: 1 }}>
+                            <input
+                                type="file"
+                                id="file-upload"
+                                multiple
+                                onChange={handleFileChange}
+                                style={{ display: 'none' }}
+                            />
+                            <label
+                                htmlFor="file-upload"
+                                className="button"
+                                style={{
+                                    display: 'block',
+                                    textAlign: 'center',
+                                    padding: '0.5rem',
+                                    background: 'var(--color-bg)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Select Files
+                            </label>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <input
+                                type="file"
+                                id="folder-upload"
+                                multiple
+                                webkitdirectory=""
+                                directory=""
+                                onChange={handleFileChange}
+                                style={{ display: 'none' }}
+                            />
+                            <label
+                                htmlFor="folder-upload"
+                                className="button"
+                                style={{
+                                    display: 'block',
+                                    textAlign: 'center',
+                                    padding: '0.5rem',
+                                    background: 'var(--color-bg)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Select Folder
+                            </label>
+                        </div>
+                    </div>
                     <p className="text-secondary" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                        Note: To upload a folder, just select it. Recursive upload is supported.
+                        Supports multiple files or recursive folder uploads.
                     </p>
                 </div>
 
