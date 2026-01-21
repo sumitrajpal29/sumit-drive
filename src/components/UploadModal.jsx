@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { uploadFile } from '../services/s3';
+import { formatBytes } from '../utils/format';
 
 export default function UploadModal({ isOpen, onClose, currentPath, onUploadComplete }) {
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [error, setError] = useState(null);
+
+    const totalSize = useMemo(() => {
+        return files.reduce((acc, file) => acc + file.size, 0);
+    }, [files]);
 
     if (!isOpen) return null;
 
@@ -22,7 +27,6 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
         setProgress({ current: 0, total: files.length });
 
         const CONCURRENCY_LIMIT = 5;
-        let activeUploads = 0;
         let currentIndex = 0;
         let failures = [];
 
@@ -138,11 +142,46 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                 </div>
 
                 {files.length > 0 && (
-                    <p className="mb-4">{files.length} files selected</p>
+                    <div className="mb-4 p-3" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
+                        <div className="flex justify-between mb-2 pb-2" style={{ borderBottom: '1px solid var(--color-border)', fontWeight: 'bold' }}>
+                            <span>{files.length} {files.length === 1 ? 'file' : 'files'} selected</span>
+                            <span>Total: {formatBytes(totalSize)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1" style={{ gap: '0.25rem' }}>
+                            {files.slice(0, 50).map((file, idx) => (
+                                <div key={idx} className="flex justify-between text-secondary" style={{ fontSize: '0.85rem' }}>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                                        {file.webkitRelativePath || file.name}
+                                    </span>
+                                    <span>{formatBytes(file.size)}</span>
+                                </div>
+                            ))}
+                            {files.length > 50 && (
+                                <div className="text-secondary text-center italic" style={{ fontSize: '0.8rem' }}>
+                                    ...and {files.length - 50} more files
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
 
                 {uploading && (
-                    <p className="mb-4">Uploading: {progress.current} / {progress.total}</p>
+                    <div className="mb-4">
+                        <div className="flex justify-between mb-1">
+                            <span>Uploading...</span>
+                            <span>{progress.current} / {progress.total}</span>
+                        </div>
+                        <div style={{ background: 'var(--color-border)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div
+                                style={{
+                                    background: 'var(--color-primary)',
+                                    height: '100%',
+                                    width: `${(progress.current / progress.total) * 100}%`,
+                                    transition: 'width 0.3s ease'
+                                }}
+                            />
+                        </div>
+                    </div>
                 )}
 
                 <div className="flex justify-between mt-4">

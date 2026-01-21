@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatBytes } from '../utils/format';
 
 export default function FileExplorer({ files, folders, onNavigate, currentPath, selectedKeys, onToggleSelect }) {
     return (
@@ -47,7 +48,7 @@ export default function FileExplorer({ files, folders, onNavigate, currentPath, 
                                 <div className="file-icon">📄</div>
                                 <div className="file-name">{file.name}</div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
-                                    {(file.size / 1024).toFixed(1)} KB
+                                    {formatBytes(file.size)}
                                 </div>
                             </a>
                         </div>
