@@ -81,7 +81,7 @@ function App() {
   return (
     <div className="app-container">
       <header className="flex justify-between items-center mb-4 p-4 card" style={{ marginBottom: '2rem' }}>
-        <h1>S3 Explorer</h1>
+        <h1>Sumit's Drive</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           {selectedKeys.size > 0 && (
             <button
