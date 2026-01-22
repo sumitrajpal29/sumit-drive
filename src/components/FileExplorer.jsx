@@ -28,7 +28,7 @@ export default function FileExplorer({ files, folders, onNavigate, selectedKeys,
                     >
                         <div className="file-icon">📁</div>
                         <div className="file-name">{folder.name}</div>
-                        <div className="file-meta">Folder</div>
+                        <div className="file-meta">{folder.name}</div>
                     </div>
                 ))}
 
