@@ -1,32 +1,48 @@
 import React from 'react';
 import { formatBytes } from '../utils/format';
 
-export default function FileExplorer({ files, folders, onNavigate, currentPath, selectedKeys, onToggleSelect }) {
+export default function FileExplorer({ files, folders, onNavigate, selectedKeys, onToggleSelect }) {
+    const isEmpty = files.length === 0 && folders.length === 0;
+
+    if (isEmpty) {
+        return (
+            <div className="flex justify-center items-center p-4" style={{ height: '300px', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                <div className="text-center">
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📂</div>
+                    <h3 className="text-muted">Empty Directory</h3>
+                    <p className="text-xs text-muted">Upload a file to get started</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
-            <h3 className="mb-4">
-                {files.length === 0 && folders.length === 0 ? "Empty Directory" : "Contents"}
-            </h3>
-
             <div className="file-grid">
+                {/* Folders */}
                 {folders.map(folder => (
-                    <div key={folder.prefix} className="file-item" onClick={() => onNavigate(folder.name)}>
+                    <div
+                        key={folder.prefix}
+                        className="file-card"
+                        onClick={() => onNavigate(folder.name)}
+                    >
                         <div className="file-icon">📁</div>
                         <div className="file-name">{folder.name}</div>
+                        <div className="file-meta">Folder</div>
                     </div>
                 ))}
 
+                {/* Files */}
                 {files.map(file => {
                     const isSelected = selectedKeys?.has(file.key);
                     return (
-                        <div key={file.key} className={`file-item ${isSelected ? 'selected' : ''}`} style={{ position: 'relative', cursor: 'default' }}>
+                        <div
+                            key={file.key}
+                            className={`file-card ${isSelected ? 'selected' : ''}`}
+                            onClick={() => window.open(file.url, '_blank')}
+                        >
                             <div
-                                style={{
-                                    position: 'absolute',
-                                    top: '5px',
-                                    left: '5px',
-                                    zIndex: 10
-                                }}
+                                className="checkbox-overlay"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onToggleSelect(file.key);
@@ -36,21 +52,19 @@ export default function FileExplorer({ files, folders, onNavigate, currentPath, 
                                     type="checkbox"
                                     checked={!!isSelected}
                                     onChange={() => { }} // handled by div click
-                                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                                 />
                             </div>
-                            <a
-                                href={file.url || "#"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
-                            >
-                                <div className="file-icon">📄</div>
+
+                            <div className="file-icon">📄</div>
+
+                            {/* Wrapper for info to help with mobile flex layout */}
+                            <div className="file-info">
                                 <div className="file-name">{file.name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                                <div className="file-meta">
                                     {formatBytes(file.size)}
                                 </div>
-                            </a>
+                            </div>
                         </div>
                     );
                 })}

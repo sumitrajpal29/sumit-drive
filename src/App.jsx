@@ -80,43 +80,65 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="flex justify-between items-center mb-4 p-4 card" style={{ marginBottom: '2rem' }}>
-        <h1>Sumit's Drive</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+      {/* Header Section */}
+      <header className="flex justify-between items-center mb-4 p-4 card" style={{ marginBottom: '1.5rem', background: 'var(--color-bg-card)' }}>
+        <div className="flex items-center gap-2">
+          <div style={{ fontSize: '1.5rem' }}>☁️</div>
+          <h1 style={{ marginBottom: 0, fontSize: '1.25rem' }}>Sumit's Drive</h1>
+        </div>
+
+        <div className="flex gap-2">
           {selectedKeys.size > 0 && (
             <button
               onClick={handleDelete}
-              style={{ backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+              className="btn btn-danger"
             >
-              Delete Selected ({selectedKeys.size})
+              Delete ({selectedKeys.size})
             </button>
           )}
           <button
             onClick={() => setIsUploadModalOpen(true)}
-            style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
+            className="btn btn-primary"
           >
-            Upload File
+            <span style={{ fontSize: '1.1rem' }}>+</span> Upload
           </button>
         </div>
       </header>
 
-      <div className="breadcrumb card">
-        <span className="breadcrumb-item" onClick={handleRootClick}>root</span>
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 mb-4 text-sm" style={{ padding: '0 0.5rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+        <button
+          className="btn btn-ghost p-2"
+          onClick={handleRootClick}
+          style={{ padding: '0.25rem 0.5rem', borderRadius: '4px' }}
+        >
+          Home
+        </button>
         {pathParts.map((part, index) => (
           <React.Fragment key={index}>
-            <span>/</span>
-            <span className="breadcrumb-item" onClick={() => handleBreadcrumbClick(index, pathParts)}>
+            <span className="text-muted">/</span>
+            <button
+              className="btn btn-ghost p-2"
+              onClick={() => handleBreadcrumbClick(index, pathParts)}
+              style={{ padding: '0.25rem 0.5rem', borderRadius: '4px' }}
+            >
               {part}
-            </span>
+            </button>
           </React.Fragment>
         ))}
-      </div>
+      </nav>
 
       <main>
-        {error && <div className="p-4 mb-4 card" style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}>{error}</div>}
+        {error && (
+          <div className="card p-4 mb-4" style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+            {error}
+          </div>
+        )}
 
         {loading ? (
-          <div className="p-4 text-center">Loading...</div>
+          <div className="flex justify-center items-center p-4" style={{ height: '200px' }}>
+            <div className="text-muted animate-fade-in">Loading content...</div>
+          </div>
         ) : (
           <FileExplorer
             files={files}

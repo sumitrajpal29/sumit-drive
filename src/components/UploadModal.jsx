@@ -26,7 +26,7 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
         const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
 
         if (oversizedFiles.length > 0) {
-            setError(`Some files exceed the 50MB limit. You are not allowed to upload files larger than ${formatBytes(MAX_FILE_SIZE)}. Please contact developer for support.`);
+            setError(`Some files exceed the 50MB limit. You are not allowed to upload files larger than ${formatBytes(MAX_FILE_SIZE)}.`);
         } else {
             setError(null);
         }
@@ -50,8 +50,6 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
             abortControllerRef.current = null;
         }
         setUploading(false);
-        // We don't clear files immediately here if they just want to stop the upload but maybe retry or change selection,
-        // but the requirement says "upload data should clear from the upload form".
         setFiles([]);
         setProgress({ current: 0, total: 0 });
     };
@@ -100,7 +98,6 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
         };
 
         const promises = [];
-        // Start initial batch
         for (let i = 0; i < Math.min(files.length, CONCURRENCY_LIMIT); i++) {
             promises.push(uploadNext());
         }
@@ -108,10 +105,7 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
         try {
             await Promise.all(promises);
 
-            if (isAborted) {
-                // Already handled in handleCancel
-                return;
-            }
+            if (isAborted) return;
 
             if (failures.length > 0) {
                 setError(`Failed to upload ${failures.length} files. Check console.`);
@@ -135,25 +129,29 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
 
     return (
         <div className="modal-overlay" onClick={handleClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-4">
-                    <h2>Upload Files</h2>
+                    <h3>Upload Files</h3>
                     <button
                         onClick={handleClose}
-                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', padding: '0 0.5rem' }}
+                        className="btn btn-ghost"
+                        style={{ fontSize: '1.25rem', padding: '0.25rem 0.75rem' }}
                     >
                         ×
                     </button>
                 </div>
-                <p className="mb-4 text-secondary">Uploading to: /{currentPath}</p>
+                <p className="mb-4 text-muted text-sm">Target: /{currentPath || 'root'}</p>
 
-                {error && <div className="p-4 mb-4" style={{ background: '#ef444420', color: '#ef4444', borderRadius: '4px' }}>{error}</div>}
+                {error && (
+                    <div className="p-4 mb-4 text-sm" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', borderRadius: 'var(--radius-sm)' }}>
+                        {error}
+                    </div>
+                )}
 
                 {!uploading && (
                     <div className="mb-4">
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Select Content:</label>
                         <div className="flex gap-4">
-                            <div style={{ flex: 1 }}>
+                            <div className="w-full">
                                 <input
                                     type="file"
                                     id="file-upload"
@@ -163,21 +161,13 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                                 />
                                 <label
                                     htmlFor="file-upload"
-                                    className="button"
-                                    style={{
-                                        display: 'block',
-                                        textAlign: 'center',
-                                        padding: '0.5rem',
-                                        background: 'var(--color-bg)',
-                                        border: '1px solid var(--color-border)',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer'
-                                    }}
+                                    className="btn btn-ghost w-full"
+                                    style={{ border: '1px dashed var(--color-border)', justifyContent: 'center' }}
                                 >
-                                    Select Files
+                                    📄 Select Files
                                 </label>
                             </div>
-                            <div style={{ flex: 1 }}>
+                            <div className="w-full">
                                 <input
                                     type="file"
                                     id="folder-upload"
@@ -189,49 +179,37 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
                                 />
                                 <label
                                     htmlFor="folder-upload"
-                                    className="button"
-                                    style={{
-                                        display: 'block',
-                                        textAlign: 'center',
-                                        padding: '0.5rem',
-                                        background: 'var(--color-bg)',
-                                        border: '1px solid var(--color-border)',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer'
-                                    }}
+                                    className="btn btn-ghost w-full"
+                                    style={{ border: '1px dashed var(--color-border)', justifyContent: 'center' }}
                                 >
-                                    Select Folder
+                                    📁 Select Folder
                                 </label>
                             </div>
                         </div>
-                        <p className="text-secondary" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                            Supports multiple files or recursive folder uploads.
-                        </p>
                     </div>
                 )}
 
                 {files.length > 0 && !uploading && (
-                    <div className="mb-4 p-3" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
-                        <div className="flex justify-between mb-2 pb-2" style={{ borderBottom: '1px solid var(--color-border)', fontWeight: 'bold' }}>
-                            <span>{files.length} {files.length === 1 ? 'file' : 'files'} selected</span>
-                            <span>Total: {formatBytes(totalSize)}</span>
+                    <div className="mb-4 p-3" style={{ background: 'var(--color-bg-main)', borderRadius: 'var(--radius-sm)', maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="flex justify-between mb-2 pb-2 text-sm font-bold" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                            <span>{files.length} selected</span>
+                            <span>{formatBytes(totalSize)}</span>
                         </div>
-                        <div className="flex flex-col gap-1" style={{ gap: '0.25rem' }}>
+                        <div className="flex flex-col gap-2">
                             {files.slice(0, 50).map((file, idx) => {
                                 const isOversized = file.size > MAX_FILE_SIZE;
                                 return (
-                                    <div key={idx} className="flex justify-between text-secondary" style={{ fontSize: '0.85rem', color: isOversized ? 'var(--color-danger)' : 'inherit' }}>
-                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                                    <div key={idx} className="flex justify-between text-muted text-xs">
+                                        <span style={{ maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isOversized ? 'var(--color-danger)' : 'inherit' }}>
                                             {file.webkitRelativePath || file.name}
-                                            {isOversized && " (Exceeds limit)"}
                                         </span>
                                         <span>{formatBytes(file.size)}</span>
                                     </div>
                                 );
                             })}
                             {files.length > 50 && (
-                                <div className="text-secondary text-center italic" style={{ fontSize: '0.8rem' }}>
-                                    ...and {files.length - 50} more files
+                                <div className="text-muted text-center italic text-xs">
+                                    ...and {files.length - 50} more
                                 </div>
                             )}
                         </div>
@@ -240,38 +218,30 @@ export default function UploadModal({ isOpen, onClose, currentPath, onUploadComp
 
                 {uploading && (
                     <div className="mb-4">
-                        <div className="flex justify-between mb-1">
-                            <span>Uploading {progress.total} files...</span>
-                            <span>{progress.current} / {progress.total}</span>
+                        <div className="flex justify-between mb-2 text-sm">
+                            <span>Uploading...</span>
+                            <span>{Math.round((progress.current / progress.total) * 100)}% ({progress.current}/{progress.total})</span>
                         </div>
-                        <div style={{ background: 'var(--color-border)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div className="progress-container">
                             <div
-                                style={{
-                                    background: 'var(--color-primary)',
-                                    height: '100%',
-                                    width: `${(progress.current / progress.total) * 100}%`,
-                                    transition: 'width 0.3s ease'
-                                }}
+                                className="progress-bar"
+                                style={{ width: `${(progress.current / progress.total) * 100}%` }}
                             />
                         </div>
                     </div>
                 )}
 
                 <div className="flex justify-between mt-4">
-                    <button onClick={handleClose}>
-                        {uploading ? 'Stop Upload' : 'Cancel'}
+                    <button onClick={handleClose} className="btn btn-ghost">
+                        {uploading ? 'Cancel' : 'Close'}
                     </button>
                     {!uploading && (
                         <button
                             onClick={handleUpload}
                             disabled={files.length === 0 || isAnyFileOversized}
-                            style={{
-                                backgroundColor: isAnyFileOversized ? 'var(--color-border)' : 'var(--color-primary)',
-                                borderColor: isAnyFileOversized ? 'var(--color-border)' : 'var(--color-primary)',
-                                cursor: isAnyFileOversized ? 'not-allowed' : 'pointer'
-                            }}
+                            className="btn btn-primary"
                         >
-                            Upload {files.length > 0 ? `(${formatBytes(totalSize)})` : ''}
+                            Start Upload
                         </button>
                     )}
                 </div>
