@@ -76,7 +76,8 @@ export const uploadFile = async (file, prefix = "", signal) => {
       },
       body: JSON.stringify({
         key,
-        contentType: file.type || 'application/octet-stream'
+        contentType: file.type || 'application/octet-stream',
+        fileSize: file.size
       }),
       signal
     });
